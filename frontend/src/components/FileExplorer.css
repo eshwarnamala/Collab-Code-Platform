@@ -1,0 +1,53 @@
+.file-explorer {
+    width: 150px;
+    border-right: 1px solid #ddd;
+    padding: 10px;
+    height: 50vh;
+  }
+  
+  .breadcrumbs {
+    padding: 8px;
+    background: #f5f5f5;
+    margin-bottom: 10px;
+  }
+  
+  .file-list {
+    margin-bottom: 15px;
+  }
+  
+  .file-item {
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .file-item:hover {
+    background: #f0f0f0;
+  }
+  
+  .file-item.folder {
+    font-weight: 500;
+  }
+  
+  .create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .create-form input[type="text"] {
+    padding: 8px;
+  }
+  
+  .create-form label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .file-item.selected {
+    background-color: #e0f7fa; /* Light blue background */
+    font-weight: bold;
+  }
