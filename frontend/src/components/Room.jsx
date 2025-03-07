@@ -2,7 +2,7 @@ import React from 'react'
 
 const Room = () => {
   return (
-    <div>Room</div>
+    <div>Room test</div>
   )
 }
 
