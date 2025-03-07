@@ -10,7 +10,7 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
   //   const [currentPath, setCurrentPath] = useState("/");
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentPath, setCurrentPath] = useState(
-    searchParams.get("path") || "/" // Initialize from URL
+    searchParams.get("path") || "/" 
   );
   const [selectedFile, setSelectedFile] = useState(
     searchParams.get("file") || null
@@ -28,10 +28,10 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
   const handleFileClick = (file) => {
     if (file.isFolder) {
       setCurrentPath(`${currentPath}${file.name}/`);
-      setSelectedFile(null); // Clear selected file when navigating to a folder
+      setSelectedFile(null); 
     } else {
       setSelectedFile(file.name);
-      onFileSelect(file); // Pass the file to the parent component
+      onFileSelect(file); 
     }
   };
 
@@ -62,7 +62,7 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
     await fetch(`/api/rooms/${roomId}/files`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include", // <-- Add this line
+      credentials: "include", 
       body: JSON.stringify({
         name: newName,
         content: "",

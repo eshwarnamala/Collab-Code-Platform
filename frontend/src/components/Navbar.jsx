@@ -1,4 +1,3 @@
-// frontend/src/components/Navbar.jsx
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
@@ -6,17 +5,17 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <div className="logo">CollabCode</div>
+      {/* <div className="logo">CollabCode</div> */}
       <div className="auth-section">
         {user ? (
           <div className="user-info">
             {/* Display profile image */}
             <img
-              src={user.profileImage} // Use the stored URL
+              src={user.profileImage} 
               alt="Profile"
               className="profile-image"
             />
-            <span>Welcome, {user.displayName}</span>
+            <h1><span>Welcome, {user.displayName}</span></h1>
             <button onClick={logout}>Logout</button>
           </div>
         ) : (

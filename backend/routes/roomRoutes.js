@@ -1,4 +1,3 @@
-// backend/routes/roomRoutes.js
 import express from "express";
 import Room from "../models/Room.js";
 import bcrypt from "bcrypt";
@@ -35,9 +34,9 @@ router.post("/create", async (req, res) => {
     });
 
     await room.save();
-    res.status(201).json({ roomId: room.roomId }); // Return the UUID
+    res.status(201).json({ roomId: room.roomId }); 
   } catch (err) {
-    console.error("Room creation error:", err); // Log the error
+    console.error("Room creation error:", err); 
     res.status(500).json({ error: "Room creation failed" });
   }
 });
@@ -80,7 +79,7 @@ router.post("/:roomId/join", async (req, res) => {
 router.get("/active", async (req, res) => {
   try {
     const rooms = await Room.find({ "members.user": req.user._id })
-      .populate("createdBy", "displayName") // Include creator's display name
+      .populate("createdBy", "displayName") 
       .sort({ createdAt: -1 }); // Sort by creation date (newest first)
 
     res.json(rooms);
@@ -90,46 +89,6 @@ router.get("/active", async (req, res) => {
   }
 });
 
-//files
-// Create/Update a file
-// router.post("/:roomId/files", async (req, res) => {
-//   try {
-//     const { roomId } = req.params;
-//     const { name, content, path } = req.body;
-
-//     // Detect language from file extension
-//     const extension = name.split(".").pop();
-//     const languageMap = {
-//       js: "javascript",
-//       py: "python",
-//       java: "java",
-//       cpp: "cpp",
-//       html: "html",
-//       css: "css",
-//       // Add more mappings
-//     };
-//     const language = languageMap[extension] || "plaintext";
-
-//     // Find the room and update files
-//     const room = await Room.findOne({ roomId });
-//     const existingFile = room.files.find(
-//       (file) => file.name === name && file.path === path
-//     );
-
-//     if (existingFile) {
-//       // Update existing file
-//       existingFile.content = content;
-//     } else {
-//       // Add new file
-//       room.files.push({ name, content, language, path });
-//     }
-
-//     await room.save();
-//     res.json({ success: true });
-//   } catch (err) {
-//     res.status(500).json({ error: "Failed to save file" });
-//   }
-// }); // working prev
 
 router.post("/:roomId/files", async (req, res) => {
   try {
@@ -211,7 +170,6 @@ router.get("/:roomId/files", async (req, res) => {
     if (!room) {
       return res.status(404).json({ error: "Room not found" });
     }
-    // Ensure _id is included in the response
     const files = room.files.map((file) => ({
       //   _id: file._id, // Add _id to response
       name: file.name,
@@ -233,8 +191,7 @@ router.post("/:roomId/execute", async (req, res) => {
   try {
     const { code, language, input } = req.body;
 
-    // Map file extensions to Piston language names
-    // In the execute route
+   
     const languageMap = {
       python: { name: "python", version: "3.10.0", displayName: "Python" },
       node: {
@@ -258,7 +215,7 @@ router.post("/:roomId/execute", async (req, res) => {
         language: langConfig.name,
         version: langConfig.version,
         files: [{ content: code }],
-        stdin: input || "", // Pass input to Piston
+        stdin: input || "", 
       }
     );
 

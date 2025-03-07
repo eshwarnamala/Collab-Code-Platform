@@ -1,7 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import AgoraRTC from "agora-rtc-sdk-ng";
-import dotenv from "dotenv";
-dotenv.config()
 
 const VoiceContext = createContext();
 
@@ -11,13 +9,14 @@ export const VoiceProvider = ({ children }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isInCall, setIsInCall] = useState(false);
   const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-
-  // Initialize Agora client
+  
   const joinRoom = async (roomId, userId) => {
     try {
-      const APP_ID = process.env.APP_ID;
-      const TOKEN = process.env.TOKEN; // Generate dynamically in production
-      
+      // const APP_ID = process.env.APP_ID;
+      // const TOKEN = process.env.TOKEN;
+      const APP_ID = '64a94f2417fa4dd8bdc069f102dfc6c5'
+      const TOKEN = '007eJxTYHjUEtL73cDkUIxPhbLLW/mPr1TSWr+n1TwOOdpf6+9Y/12Bwcwk0dIkzcjE0Dwt0SQlxSIpJdnAzDLN0MAoJS3ZLNk0X2BtekMgI8POhvvMjAwQCOKrMJhamhpbmhka6xqnJZnrmqQlJeomGpkk6SaZmxkamqaZpKYlmjIwAABfDikc'
+
       await client.join(APP_ID, roomId, TOKEN, userId);
       const microphoneTrack = await AgoraRTC.createMicrophoneAudioTrack();
       await client.publish([microphoneTrack]);
@@ -29,7 +28,7 @@ export const VoiceProvider = ({ children }) => {
     }
   };
 
-  // Leave the voice call 
+  // Leave the voice call
   const leaveRoom = async () => {
     if (localAudioTrack) {
       localAudioTrack.close();
@@ -68,30 +67,36 @@ export const VoiceProvider = ({ children }) => {
   }, []);
   useEffect(() => {
     const handleUserPublished = async (user, mediaType) => {
-      await client.subscribe(user, mediaType); // Subscribe to audio
+      await client.subscribe(user, mediaType);
       if (mediaType === "audio") {
-        user.audioTrack.play(); // Play remote audio
+        user.audioTrack.play();
       }
     };
-  
+
     client.on("user-published", handleUserPublished);
     return () => client.off("user-published", handleUserPublished);
   }, []);
 
   return (
     <VoiceContext.Provider
-      value={{ joinRoom, leaveRoom, toggleMute, isMuted, isInCall, remoteUsers }}
+      value={{
+        joinRoom,
+        leaveRoom,
+        toggleMute,
+        isMuted,
+        isInCall,
+        remoteUsers,
+      }}
     >
       {children}
     </VoiceContext.Provider>
   );
 };
 
-// Create hook
 export const useVoice = () => {
-    const context = useContext(VoiceContext);
-    if (!context) {
-      throw new Error("useVoice must be used within a VoiceProvider");
-    }
-    return context;
-  };
+  const context = useContext(VoiceContext);
+  if (!context) {
+    throw new Error("useVoice must be used within a VoiceProvider");
+  }
+  return context;
+};

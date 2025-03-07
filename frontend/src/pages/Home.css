@@ -1,28 +1,32 @@
-/* frontend/src/pages/Home.css */
 .home-container {
-    padding: 20px;
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  
-  .home-container form {
-    margin: 20px 0;
-    display: flex;
-    gap: 10px;
-  }
-  
-  .home-container input {
-    flex: 1;
-    padding: 8px;
-  }
-  
-  .active-rooms {
-    margin-top: 20px;
-  }
-  
-  .room-card {
-    border: 1px solid #ddd;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-  }
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.home-container form {
+  margin: 20px 0;
+  display: flex;
+  gap: 10px;
+}
+
+.home-container input {
+  flex: 1;
+  padding: 8px;
+}
+
+.active-rooms {
+  margin-top: 20px;
+}
+
+.room-card {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.room-actions {
+  display: flex;
+  gap: 30px;
+}

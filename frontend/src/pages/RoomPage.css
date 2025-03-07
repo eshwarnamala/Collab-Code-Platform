@@ -95,7 +95,7 @@
     border-left: 2px solid black !important;
     margin-left: -1px !important;
     position: relative;
-    z-index: 1; /* Keep above text */
+    z-index: 1; 
   }
 
   /* Cursor styling */
@@ -189,3 +189,22 @@
     gap: 8px;
     padding: 4px;
   }
+/* AI Suggestion Panel */
+.ai-suggestion {
+  margin-top: 20px;
+  padding: 15px;
+  background: #1e1e1e;
+  border-radius: 4px;
+  border: 1px solid #333;
+}
+
+.ai-suggestion h4 {
+  color: #4CAF50;
+  margin-bottom: 10px;
+}
+
+.ai-suggestion pre {
+  white-space: pre-wrap;
+  color: wheat;
+  margin: 0;
+}

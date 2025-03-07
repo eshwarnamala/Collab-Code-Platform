@@ -1,10 +1,9 @@
-// frontend/src/pages/RoomPage.jsx
 import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Editor from "@monaco-editor/react";
 import FileExplorer from "../components/FileExplorer";
-import socket from "../utils/socket"; // Import Socket.io client
+import socket from "../utils/socket"; 
 import { getUserColor } from "../utils/colors";
 import throttle from "lodash.throttle";
 import { useVoice } from "../context/VoiceContext";
@@ -17,13 +16,16 @@ const RoomPage = () => {
   const { user } = useAuth();
   const { roomId } = useParams();
   const [currentFile, setCurrentFile] = useState(null);
-  const [code, setCode] = useState(""); // Local state for editor content
+  const [code, setCode] = useState(""); 
   const [remoteCursors, setRemoteCursors] = useState({});
   const editorRef = useRef(null);
   //   const [output, setOutput] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [decorations, setDecorations] = useState([]);
   const [input, setInput] = useState("");
+
+  const [aiSuggestion, setAiSuggestion] = useState("");
+  const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false);
 
   // Fetch files and set current file on mount
   useEffect(() => {
@@ -41,7 +43,7 @@ const RoomPage = () => {
         if (selectedFile) {
           setCurrentFile(selectedFile);
           setCode(selectedFile.content); // Initialize editor content
-          editorRef.current = null; // Reset editor ref
+          // editorRef.current = null; // Reset editor ref
         }
       }
     };
@@ -61,7 +63,7 @@ const RoomPage = () => {
   // Listen for cursor updates from others
   useEffect(() => {
     const handleCursorUpdate = ({ cursor, userId, username }) => {
-      console.log("Remote cursor update:", userId, cursor); // Debug
+      console.log("Remote cursor update:", userId, cursor); 
       setRemoteCursors((prev) => ({
         ...prev,
         [userId]: { ...cursor, username, color: getUserColor(userId) }, // Overwrite old position
@@ -76,7 +78,7 @@ const RoomPage = () => {
   const handleEditorMount = (editor) => {
     editorRef.current = editor;
     // console.log("Editor mounted");
-    console.log("Editor mounted for file:", currentFile.name); // Debug
+    console.log("Editor mounted for file:", currentFile.name); 
     const throttledEmitCursor = throttle((cursor) => {
       socket.emit("cursor-position", {
         roomId,
@@ -84,21 +86,42 @@ const RoomPage = () => {
         userId: user._id,
         username: user.username,
       });
-    }, 100); // Emit every 100ms
+    }, 100); 
 
-    // editor.onDidChangeCursorPosition((e) => {
-    //   const cursor = {
-    //     lineNumber: e.position.lineNumber,
-    //     column: e.position.column,
-    //   };
-    //   console.log("Local cursor moved to:", cursor); // Debug
-    //   socket.emit("cursor-position", {
-    //     roomId,
-    //     cursor,
-    //     userId: user._id,
-    //     username: user.username,
-    //   });
-    // });
+    editor.addCommand(
+      monaco.KeyMod.CtrlCmd | monaco.KeyCode.Space,
+      async () => {
+        const code = editor.getValue();
+        const selection = editor.getSelection();
+        const selectedCode = code.substring(0, selection.positionColumn);
+
+        setIsLoadingSuggestion(true);
+        try {
+          const response = await fetch("/api/ai/suggest", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              code: selectedCode,
+              language: currentFile.language,
+            }),
+          });
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || "Failed to fetch suggestion");
+          }
+
+          // setAiSuggestion(data.suggestion);
+          setAiSuggestion(data.suggestion.replace(/\r\n/g, '\n'));
+        } catch (err) {
+          setAiSuggestion("Error: " + err.message);
+        } finally {
+          setIsLoadingSuggestion(false);
+        }
+      }
+    );
+
+ 
     editor.onDidChangeCursorPosition((e) => {
       const cursor = {
         lineNumber: e.position.lineNumber,
@@ -115,61 +138,16 @@ const RoomPage = () => {
     // Listen for code updates from other users
     socket.on("code-update", ({ code, filePath }) => {
       if (currentFile?.path === filePath) {
-        setCode(code); // Update editor content
+        setCode(code); 
       }
     });
 
-    // Cleanup on unmount
     return () => {
       socket.off("code-update");
     };
   }, [roomId, currentFile]);
 
-  // Add cursor decorations to the editor
-  //   useEffect(() => {
-  //     if (!editorRef.current) {
-  //       console.log("Editor ref not available - skipping decorations");
-  //       return; // Exit early if editor isn’t mounted
-  //     }
 
-  //     console.log("Applying decorations for cursors:", remoteCursors); // Debug
-
-  //     const decorations = Object.values(remoteCursors).map((cursor) => {
-  //       return editorRef.current.deltaDecorations(
-  //         [],
-  //         [
-  //           {
-  //             range: {
-  //               startLineNumber: cursor.lineNumber,
-  //               startColumn: cursor.column,
-  //               endLineNumber: cursor.lineNumber,
-  //               endColumn: cursor.column,
-  //             },
-  //             options: {
-  //               className: "remote-cursor",
-  //               glyphMarginClassName: "remote-cursor-margin",
-  //               hoverMessage: { value: `**${cursor.username}**` },
-  //               stickiness: 1,
-  //               overviewRuler: {
-  //                 color: cursor.color,
-  //                 position: monaco.editor.OverviewRulerLane.Full,
-  //               },
-  //               inlineClassName: "remote-cursor", // Add inline style
-  //               glyphMarginHoverMessage: { value: `**${cursor.username}**` },
-  //               inlineStyle: { borderLeftColor: cursor.color }, // <-- Add this
-  //             },
-  //           },
-  //         ]
-  //       );
-  //     });
-
-  //     return () => {
-  //       console.log("Clearing decorations");
-  //       decorations.forEach((decorationId) => {
-  //         editorRef.current.deltaDecorations(decorationId, []);
-  //       });
-  //     };
-  //   }, [remoteCursors]);
 
   // Replace the decorations useEffect with model markers
   useEffect(() => {
@@ -197,11 +175,12 @@ const RoomPage = () => {
 
     // Apply new decorations and store their IDs
     const decorationIds = editorRef.current.deltaDecorations(
-      oldDecorations, // Clear old decorations
-      newDecorations // Add new ones
+      oldDecorations, 
+      newDecorations 
     );
     setDecorations(decorationIds);
   }, [remoteCursors]);
+
   useEffect(() => {
     return () => {
       if (editorRef.current) {
@@ -209,6 +188,7 @@ const RoomPage = () => {
       }
     };
   }, []);
+
 
   // Handle code changes in the editor
   const handleFileChange = async (value) => {
@@ -219,6 +199,7 @@ const RoomPage = () => {
     socket.emit("code-change", {
       roomId,
       code: value,
+      // code: code,
       filePath: currentFile.path,
     });
 
@@ -231,12 +212,13 @@ const RoomPage = () => {
         body: JSON.stringify({
           name: currentFile.name,
           content: value,
+          // content: code,
           path: currentFile.path,
         }),
       });
 
       const data = await response.json();
-      console.log("Backend response:", data); // Debugging
+      console.log("Backend response:", data); 
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to save file");
@@ -264,14 +246,14 @@ const RoomPage = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Cache-Control": "no-cache", // Prevent caching
+          "Cache-Control": "no-cache", 
         },
         body: JSON.stringify({
           //   code: currentFile.content,
           code: code,
           language: currentFile.language,
           input: input,
-          timestamp: Date.now(), // Cache-busting parameter
+          timestamp: Date.now(), 
         }),
       });
 
@@ -315,9 +297,9 @@ const RoomPage = () => {
           <FileExplorer
             roomId={roomId}
             onFileSelect={(file) => {
-              console.log("Selected file:", file); // Debugging
+              console.log("Selected file:", file); 
               setCurrentFile(file);
-              setCode(file.content); // Update editor content
+              setCode(file.content); 
             }}
           />
         </div>
@@ -333,10 +315,16 @@ const RoomPage = () => {
                 key={`${currentFile.path}-${currentFile.name}`}
                 height="60vh"
                 language={currentFile.language}
-                value={code} // Use local state for editor content
+                value={code} 
                 onChange={handleFileChange}
                 onMount={handleEditorMount}
               />
+              {aiSuggestion && (
+                <div className="ai-suggestion">
+                  <h4>AI Suggestion:</h4>
+                  <pre>{aiSuggestion}</pre>
+                </div>
+              )}
               {/* Input field */}
               <div className="input-container">
                 <label>Input (stdin):</label>
@@ -366,126 +354,3 @@ const RoomPage = () => {
 
 export default RoomPage;
 
-// import { useEffect, useState } from "react";
-// import { useParams } from "react-router-dom";
-// import { useAuth } from "../context/AuthContext";
-// import Editor from "@monaco-editor/react";
-// import FileExplorer from "../components/FileExplorer";
-
-// const RoomPage = () => {
-//   const { roomId } = useParams();
-//   const { user } = useAuth();
-//   const [files, setFiles] = useState([]); // List of files
-//   const [currentFile, setCurrentFile] = useState(null); // Selected file
-//   const [fileName, setFileName] = useState(""); // New file name
-//   const [fileContent, setFileContent] = useState(""); // Editor content
-
-//   // Fetch files when room loads
-//   useEffect(() => {
-//     const fetchFiles = async () => {
-//       try {
-//         const response = await fetch(`/api/rooms/${roomId}/files`);
-//         const data = await response.json();
-//         setFiles(data);
-//       } catch (error) {
-//         console.error("Error fetching files:", error);
-//       }
-//     };
-//     fetchFiles();
-//   }, [roomId]);
-
-//   // Create a new file
-//   const handleCreateFile = async () => {
-//     if (!fileName.trim()) return alert("Enter a valid file name!");
-
-//     try {
-//       const response = await fetch(`/api/rooms/${roomId}/files`, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({
-//           name: fileName,
-//           content: "", // New file starts empty
-//           path: "/",
-//         }),
-//         credentials: "include",
-//       });
-
-//       if (!response.ok) throw new Error("File creation failed");
-
-//       const newFile = await response.json();
-//       setFiles([...files, newFile]); // Update file list
-//       setFileName(""); // Clear input field
-//     } catch (error) {
-//       console.error("Error creating file:", error);
-//     }
-//   };
-
-//   // Open a file in editor
-//   const handleOpenFile = (file) => {
-//     setCurrentFile(file);
-//     setFileContent(file.content);
-//   };
-
-//   // Save changes in the file
-//   const handleSaveFile = async (content) => {
-//     if (!currentFile) return;
-
-//     try {
-//       const response = await fetch(`/api/rooms/${roomId}/files/${currentFile.name}`, {
-//         method: "PUT", // Change to PUT for updating
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ content }),
-//         credentials: "include",
-//       });
-
-//       if (!response.ok) throw new Error("File saving failed");
-
-//       setFiles(
-//         files.map((file) =>
-//           file.name === currentFile.name ? { ...file, content } : file
-//         )
-//       ); // Update file in state
-
-//     } catch (error) {
-//       console.error("Error saving file:", error);
-//     }
-//   };
-
-//   return (
-//     user ? <div className="room-page">
-//       <h2>Room: {roomId}</h2>
-//       <p>Welcome, {user?.displayName}</p>
-
-//       {/* File List */}
-//       <div className="file-list">
-//         {files.map((file) => (
-//           <div key={file._id} onClick={() => handleOpenFile(file)}>
-//             📄 {file.name}
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* File Creation */}
-//       <input
-//         type="text"
-//         placeholder="New file name (e.g., app.js)"
-//         value={fileName}
-//         onChange={(e) => setFileName(e.target.value)}
-//       />
-//       <button onClick={handleCreateFile}>Create File</button>
-
-//       {/* Code Editor */}
-//       {currentFile && (
-//         <Editor
-//           height="60vh"
-//           language={currentFile.language || "javascript"}
-//           value={fileContent}
-//           onChange={setFileContent} // Update local state
-//           onBlur={() => handleSaveFile(fileContent)} // Save on blur
-//         />
-//       )}
-//     </div> : ""
-//   );
-// };
-
-// export default RoomPage;

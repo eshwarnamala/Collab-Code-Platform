@@ -10,6 +10,8 @@ import authRoutes from "./routes/authRoutes.js";
 import "./controllers/authController.js";
 import roomRoutes from "./routes/roomRoutes.js";
 import { initSocket } from "./utils/socket.js";
+import aiRoutes from "./routes/aiRoutes.js";
+
 
 // Load environment variables
 dotenv.config();
@@ -37,7 +39,7 @@ app.use(
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       sameSite: "lax", // Allows cross-origin cookies
-      secure: false, // Set to true in production (HTTPS only)
+      secure: false, 
     },
   })
 );
@@ -47,6 +49,8 @@ app.use(passport.session());
 // Routes
 app.use("/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
+
+app.use("/api/ai", aiRoutes);
 
 // Test route
 app.get("/", (req, res) => {

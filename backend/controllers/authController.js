@@ -1,11 +1,10 @@
-// backend/controllers/authController.js
 import passport from "passport";
-import { Strategy as GitHubStrategy } from "passport-github2"; // Correct import
+import { Strategy as GitHubStrategy } from "passport-github2"; 
 import dotenv from 'dotenv';
-import User from "../models/User.js"; // Import the User model
+import User from "../models/User.js"; 
 
 dotenv.config();
-// backend/controllers/authController.js
+
 
 passport.use(
   new GitHubStrategy(
@@ -38,7 +37,7 @@ passport.use(
   )
 );
 
-// Update serialize/deserialize to use user ID
+// serialize/deserialize to use user ID
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
   try {

@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import './Home.css';
 
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
-  const [action, setAction] = useState("create"); // 'create' or 'join'
+  const [action, setAction] = useState("create"); 
   const [roomName, setRoomName] = useState("");
   const [roomId, setRoomId] = useState("");
   const [password, setPassword] = useState("");
@@ -66,7 +67,8 @@ const Home = () => {
   return (
     <div className="home-container">
         <div className="intro">
-            <h1>{user.displayName}, Welcome to CodeCollab!!</h1>
+          <Navbar />
+            {/* <h1>{user.displayName}, Welcome to CodeCollab!!</h1> */}
             <p>Create and join virtual rooms with friends, family, or colleagues.</p>
         </div>
       <div className="room-actions">

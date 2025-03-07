@@ -1,4 +1,3 @@
-// Generate a color from a user ID (deterministic)
 export const getUserColor = (userId) => {
     const colors = [
       "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEEAD",
