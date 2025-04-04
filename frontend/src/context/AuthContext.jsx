@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
 
   
   const login = () => {
-    window.location.href = "http://localhost:5000/auth/github";
+    window.location.href = "https://collab-code-platform-server.vercel.app/auth/github";
   };
 
   

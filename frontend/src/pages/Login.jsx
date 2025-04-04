@@ -13,7 +13,7 @@ const Login = () => {
   return (
     <div className="login-page">
       <h1>Collaborative Coding Platform</h1>
-      <button onClick={() => window.location.href = "http://localhost:5000/auth/github"}>
+      <button onClick={() => window.location.href = "https://collab-code-platform-server.vercel.app/auth/github"}>
         Login with GitHub
       </button>
     </div>

@@ -22,7 +22,8 @@ connectDB();
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    // origin: "http://localhost:3000",
+    origin: "https://collab-code-platform-client.vercel.app",
     credentials: true,
   })
 );

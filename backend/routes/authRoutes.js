@@ -14,7 +14,7 @@ router.get(
   passport.authenticate("github", { failureRedirect: "/login" }),
   (req, res) => {
     
-    res.redirect("http://localhost:3000/home");
+    res.redirect("https://collab-code-platform-client.vercel.app/home");
   }
 );
 

@@ -12,8 +12,11 @@ export const VoiceProvider = ({ children }) => {
   
   const joinRoom = async (roomId, userId) => {
     try {
-      const APP_ID = process.env.APP_ID;
-      const TOKEN = process.env.TOKEN;
+      const APP_ID = import.meta.env.APP_ID;
+      const TOKEN = import.meta.env.TOKEN;
+      if (!APP_ID || !TOKEN) {
+        throw new Error("Missing Agora APP_ID or TOKEN");
+      }
       
       await client.join(APP_ID, roomId, TOKEN, userId);
       const microphoneTrack = await AgoraRTC.createMicrophoneAudioTrack();
@@ -47,11 +50,16 @@ export const VoiceProvider = ({ children }) => {
 
   
   useEffect(() => {
+    // if(!client) return;
     const handleUserJoined = (user) => {
       setRemoteUsers((prev) => [...prev, user]);
     };
 
     const handleUserLeft = (user) => {
+      // if (user.audioTrack) {
+      //   user.audioTrack.stop();
+      //   user.audioTrack.close();
+      // }
       setRemoteUsers((prev) => prev.filter((u) => u.uid !== user.uid));
     };
 
@@ -63,6 +71,7 @@ export const VoiceProvider = ({ children }) => {
       client.off("user-unpublished", handleUserLeft);
     };
   }, []);
+
   useEffect(() => {
     const handleUserPublished = async (user, mediaType) => {
       await client.subscribe(user, mediaType);
