@@ -23,7 +23,8 @@ connectDB();
 app.use(
   cors({
     // origin: "http://localhost:3000",
-    origin: "https://collab-code-platform-client.vercel.app",
+    // origin: "https://collab-code-platform-client.vercel.app",
+    origin: "https://collab-code-platform-client.onrender.com",
     credentials: true,
   })
 );

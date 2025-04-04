@@ -14,7 +14,8 @@ router.get(
   passport.authenticate("github", { failureRedirect: "/login" }),
   (req, res) => {
     
-    res.redirect("https://collab-code-platform-client.vercel.app/home");
+    // res.redirect("https://collab-code-platform-client.vercel.app/home");
+    res.redirect("https://collab-code-platform-client.onrender.com/home");
   }
 );
 
