@@ -12,11 +12,9 @@ export const VoiceProvider = ({ children }) => {
   
   const joinRoom = async (roomId, userId) => {
     try {
-      // const APP_ID = process.env.APP_ID;
-      // const TOKEN = process.env.TOKEN;
-      const APP_ID = '64a94f2417fa4dd8bdc069f102dfc6c5'
-      const TOKEN = '007eJxTYPiqxbzp8AnFhBfW7Pcm1UqJ7nX/NU3rzJV6EeHm0sgphdkKDGYmiZYmaUYmhuZpiSYpKRZJKckGZpZphgZGKWnJZsmmr3c/Tm8IZGSQW3GbiZEBAkF8FYYUS2NLE2MLI11jAxNjXZMkSwPdpLQkS11LizQLy+RU86RUCyMGBgDLRCfg'
-
+      const APP_ID = process.env.APP_ID;
+      const TOKEN = process.env.TOKEN;
+      
       await client.join(APP_ID, roomId, TOKEN, userId);
       const microphoneTrack = await AgoraRTC.createMicrophoneAudioTrack();
       await client.publish([microphoneTrack]);
