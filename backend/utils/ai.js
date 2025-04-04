@@ -6,7 +6,6 @@ dotenv.config();
 const HF_TOKEN = process.env.HF_KEY;
 const hf = new HfInference(HF_TOKEN);
 
-// Code Autocompletion
 export const getCodeSuggestions = async (code, language) => {
     try {
       const response = await hf.textGeneration({
@@ -21,7 +20,6 @@ export const getCodeSuggestions = async (code, language) => {
     }
   };
 
-// Error Resolution
 export const resolveError = async (error, code) => {
   const prompt = `Fix this error in the code:\nError: ${error}\nCode:\n${code}\nSolution:`;
   const response = await hf.textGeneration({
@@ -31,7 +29,6 @@ export const resolveError = async (error, code) => {
   return response.generated_text;
 };
 
-// Code Summarization
 export const summarizeCode = async (code) => {
   const response = await hf.summarization({
     model: "facebook/bart-large-cnn",

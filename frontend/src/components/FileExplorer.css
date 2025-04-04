@@ -48,6 +48,6 @@
   }
 
   .file-item.selected {
-    background-color: #e0f7fa; /* Light blue background */
+    background-color: #e0f7fa; 
     font-weight: bold;
   }

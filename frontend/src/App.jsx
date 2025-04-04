@@ -14,13 +14,11 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           
-          {/* Protected Routes */}
           <Route element={<PrivateRoute />}>
             <Route path="/home" element={<Home />} />
             <Route path="/room/:roomId" element={<RoomPage />} />
           </Route>
 
-          {/* Redirect unknown routes */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </AuthProvider>

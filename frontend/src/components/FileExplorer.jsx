@@ -16,7 +16,7 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
     searchParams.get("file") || null
   );
 
-  // Update URL when currentPath or selectedFile changes
+  
   useEffect(() => {
     const params = {};
     if (currentPath) params.path = currentPath;
@@ -24,7 +24,7 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
     setSearchParams(params);
   }, [currentPath, selectedFile]);
 
-  /// Handle file selection
+ 
   const handleFileClick = (file) => {
     if (file.isFolder) {
       setCurrentPath(`${currentPath}${file.name}/`);
@@ -35,7 +35,7 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
     }
   };
 
-  // Fetch files for the current path
+  
   useEffect(() => {
     const fetchFiles = async () => {
       const response = await fetch(`/api/rooms/${roomId}/files`);
@@ -53,12 +53,12 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
     setFiles(filteredFiles);
   };
 
-  //   Create file/folder
+  
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!newName) return;
 
-    // Add credentials: "include" to send cookies
+    
     await fetch(`/api/rooms/${roomId}/files`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -75,7 +75,7 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
     setIsCreatingFolder(false);
   };
 
-  // Handle breadcrumb clicks
+  
   const handleBreadcrumbClick = (index) => {
     const newPath =
       currentPath
@@ -100,7 +100,7 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
         ))}
       </div>
 
-      {/* File/Folder List */}
+      
       <div className="file-list">
         {files.map((file) => (
           <div
@@ -115,7 +115,7 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
         ))}
       </div>
 
-      {/* Create New File/Folder */}
+      
       <form onSubmit={handleCreate} className="create-form">
         <input
           type="text"

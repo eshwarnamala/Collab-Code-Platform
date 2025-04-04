@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from "react";
-import { debounce } from "lodash";
 
 const AISuggestions = ({ code, language, onSuggestionSelect }) => {
   const [suggestions, setSuggestions] = useState([]);

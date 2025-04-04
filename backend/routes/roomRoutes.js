@@ -6,24 +6,24 @@ import axios from "axios";
 
 const router = express.Router();
 
-// Create a new room
+
 router.post("/create", async (req, res) => {
   try {
     const { name, password } = req.body;
 
-    // Validate user is authenticated
+    
     if (!req.user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Validate input
+
     if (!name || !password) {
       return res
         .status(400)
         .json({ error: "Room name and password are required" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10); // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10); 
 
     const room = new Room({
       roomId: uuidv4(),
@@ -41,30 +41,30 @@ router.post("/create", async (req, res) => {
   }
 });
 
-// Join an existing room
+
 router.post("/:roomId/join", async (req, res) => {
   try {
     const { roomId } = req.params;
     const { password } = req.body;
 
-    // Find the room
+    
     const room = await Room.findOne({ roomId });
     if (!room) {
       return res.status(404).json({ error: "Room not found" });
     }
 
-    // Verify the password
+    
     const isValid = await bcrypt.compare(password, room.password);
     if (!isValid) {
       return res.status(401).json({ error: "Invalid password" });
     }
 
-    // Check if the user is already a member
+    
     const isMember = room.members.some((member) =>
       member.user.equals(req.user._id)
     );
     if (!isMember) {
-      room.members.push({ user: req.user._id }); // Add the user to the room
+      room.members.push({ user: req.user._id }); 
       await room.save();
     }
 
@@ -75,12 +75,12 @@ router.post("/:roomId/join", async (req, res) => {
   }
 });
 
-// Get active rooms for the authenticated user
+
 router.get("/active", async (req, res) => {
   try {
     const rooms = await Room.find({ "members.user": req.user._id })
       .populate("createdBy", "displayName") 
-      .sort({ createdAt: -1 }); // Sort by creation date (newest first)
+      .sort({ createdAt: -1 }); 
 
     res.json(rooms);
   } catch (err) {
@@ -95,31 +95,31 @@ router.post("/:roomId/files", async (req, res) => {
     const { roomId } = req.params;
     const { name, content, path, isFolder } = req.body;
 
-    // Validate input
+    
     if (!name || !path) {
       return res.status(400).json({ error: "Name and path are required" });
     }
 
-    // Find the room
+    
     const room = await Room.findOne({ roomId });
     if (!room) return res.status(404).json({ error: "Room not found" });
 
-    // Normalize paths (remove trailing slashes)
+    
     const normalizePath = (path) => path.replace(/\/+$/, "");
 
-    // Check if the file exists
+    
     const existingFile = room.files.find(
       (file) =>
         file.name === name && normalizePath(file.path) === normalizePath(path)
     );
 
     if (existingFile) {
-      // Update existing file content
+      
       existingFile.content = content;
       await room.save();
       return res.json({ success: true });
     } else {
-      // Check for duplicates before creating
+      
       const duplicate = room.files.find(
         (file) =>
           file.name === name && normalizePath(file.path) === normalizePath(path)
@@ -128,7 +128,7 @@ router.post("/:roomId/files", async (req, res) => {
         return res.status(400).json({ error: "File/folder already exists" });
       }
 
-      // Detect language for new files
+      
       let language = "plaintext";
       if (!isFolder) {
         const extension = name.split(".").pop();
@@ -145,7 +145,7 @@ router.post("/:roomId/files", async (req, res) => {
         language = languageMap[extension] || "plaintext";
       }
 
-      // Add new file/folder
+      
       room.files.push({
         name,
         content: isFolder ? "" : content,
@@ -163,7 +163,7 @@ router.post("/:roomId/files", async (req, res) => {
   }
 });
 
-// Get all files in a room
+
 router.get("/:roomId/files", async (req, res) => {
   try {
     const room = await Room.findOne({ roomId: req.params.roomId });
@@ -171,7 +171,7 @@ router.get("/:roomId/files", async (req, res) => {
       return res.status(404).json({ error: "Room not found" });
     }
     const files = room.files.map((file) => ({
-      //   _id: file._id, // Add _id to response
+      //   _id: file._id, 
       name: file.name,
       content: file.content,
       language: file.language,
@@ -185,7 +185,7 @@ router.get("/:roomId/files", async (req, res) => {
   }
 });
 
-// Execute code using Piston API
+
 router.post("/:roomId/execute", async (req, res) => {
   console.log("Execution request received:", req.body.timestamp);
   try {
@@ -208,7 +208,7 @@ router.post("/:roomId/execute", async (req, res) => {
       return res.status(400).json({ error: "Unsupported language" });
     }
 
-    // Send code to Piston API
+    
     const response = await axios.post(
       "https://emkc.org/api/v2/piston/execute",
       {

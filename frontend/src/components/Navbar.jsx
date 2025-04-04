@@ -9,7 +9,7 @@ const Navbar = () => {
       <div className="auth-section">
         {user ? (
           <div className="user-info">
-            {/* Display profile image */}
+            
             <img
               src={user.profileImage} 
               alt="Profile"

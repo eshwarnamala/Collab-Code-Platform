@@ -15,11 +15,10 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // Check if user exists
         let user = await User.findOne({ githubId: profile.id });
         console.log(user);
         if (!user) {
-          // Create new user if not found
+          
           user = await User.create({
             githubId: profile.id,
             username: profile.username,
@@ -37,7 +36,6 @@ passport.use(
   )
 );
 
-// serialize/deserialize to use user ID
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
   try {

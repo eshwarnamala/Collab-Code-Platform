@@ -15,7 +15,7 @@ export const VoiceProvider = ({ children }) => {
       // const APP_ID = process.env.APP_ID;
       // const TOKEN = process.env.TOKEN;
       const APP_ID = '64a94f2417fa4dd8bdc069f102dfc6c5'
-      const TOKEN = '007eJxTYHjUEtL73cDkUIxPhbLLW/mPr1TSWr+n1TwOOdpf6+9Y/12Bwcwk0dIkzcjE0Dwt0SQlxSIpJdnAzDLN0MAoJS3ZLNk0X2BtekMgI8POhvvMjAwQCOKrMJhamhpbmhka6xqnJZnrmqQlJeomGpkk6SaZmxkamqaZpKYlmjIwAABfDikc'
+      const TOKEN = '007eJxTYPiqxbzp8AnFhBfW7Pcm1UqJ7nX/NU3rzJV6EeHm0sgphdkKDGYmiZYmaUYmhuZpiSYpKRZJKckGZpZphgZGKWnJZsmmr3c/Tm8IZGSQW3GbiZEBAkF8FYYUS2NLE2MLI11jAxNjXZMkSwPdpLQkS11LizQLy+RU86RUCyMGBgDLRCfg'
 
       await client.join(APP_ID, roomId, TOKEN, userId);
       const microphoneTrack = await AgoraRTC.createMicrophoneAudioTrack();
@@ -28,7 +28,7 @@ export const VoiceProvider = ({ children }) => {
     }
   };
 
-  // Leave the voice call
+  
   const leaveRoom = async () => {
     if (localAudioTrack) {
       localAudioTrack.close();
@@ -39,7 +39,7 @@ export const VoiceProvider = ({ children }) => {
     }
   };
 
-  // Toggle microphone mute
+  
   const toggleMute = () => {
     if (localAudioTrack) {
       localAudioTrack.setMuted(!isMuted);
@@ -47,7 +47,7 @@ export const VoiceProvider = ({ children }) => {
     }
   };
 
-  // Listen for remote users
+  
   useEffect(() => {
     const handleUserJoined = (user) => {
       setRemoteUsers((prev) => [...prev, user]);

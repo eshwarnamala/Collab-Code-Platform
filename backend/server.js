@@ -13,17 +13,13 @@ import { initSocket } from "./utils/socket.js";
 import aiRoutes from "./routes/aiRoutes.js";
 
 
-// Load environment variables
 dotenv.config();
 
-// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB
 connectDB();
 
-// Middleware
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -37,8 +33,8 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: "lax", // Allows cross-origin cookies
+      maxAge: 24 * 60 * 60 * 1000, 
+      sameSite: "lax", 
       secure: false, 
     },
   })
@@ -46,13 +42,11 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Routes
 app.use("/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
 
 app.use("/api/ai", aiRoutes);
 
-// Test route
 app.get("/", (req, res) => {
   res.send("Collab Coding Platform Backend");
 });

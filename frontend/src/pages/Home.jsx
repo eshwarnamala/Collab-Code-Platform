@@ -13,7 +13,6 @@ const Home = () => {
   const [roomId, setRoomId] = useState("");
   const [password, setPassword] = useState("");
 
-  // Fetch active rooms (only for members)
   useEffect(() => {
     const fetchRooms = async () => {
       try {
@@ -29,7 +28,6 @@ const Home = () => {
     if (user) fetchRooms();
   }, [user]);
 
-  // Create Room
   const handleCreateRoom = async (e) => {
     e.preventDefault();
     try {
@@ -40,13 +38,12 @@ const Home = () => {
         credentials: "include",
       });
       const { roomId } = await response.json();
-      navigate(`/room/${roomId}`); // Redirect to the room
+      navigate(`/room/${roomId}`); 
     } catch (err) {
       alert("Failed to create room");
     }
   };
 
-  // Join Room
   const handleJoinRoom = async (e) => {
     e.preventDefault();
     try {
@@ -56,7 +53,7 @@ const Home = () => {
         body: JSON.stringify({ password }),
         credentials: "include",
       });
-      if (response.ok) navigate(`/room/${roomId}`); // Redirect to the room
+      if (response.ok) navigate(`/room/${roomId}`); 
       else alert("Invalid credentials");
     } catch (err) {
       alert("Failed to join room");

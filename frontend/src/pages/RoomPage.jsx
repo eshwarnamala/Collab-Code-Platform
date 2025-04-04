@@ -27,7 +27,6 @@ const RoomPage = () => {
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false);
 
-  // Fetch files and set current file on mount
   useEffect(() => {
     const fetchFiles = async () => {
       const response = await fetch(`/api/rooms/${roomId}/files`);
@@ -42,15 +41,15 @@ const RoomPage = () => {
         );
         if (selectedFile) {
           setCurrentFile(selectedFile);
-          setCode(selectedFile.content); // Initialize editor content
-          // editorRef.current = null; // Reset editor ref
+          setCode(selectedFile.content); 
+          // editorRef.current = null; 
         }
       }
     };
     fetchFiles();
   }, [roomId, searchParams]);
 
-  // Join voice chat when entering the room
+  
   useEffect(() => {
     if (user?._id) {
       joinRoom(roomId, user._id);
@@ -60,13 +59,13 @@ const RoomPage = () => {
     };
   }, [user, roomId]);
 
-  // Listen for cursor updates from others
+  
   useEffect(() => {
     const handleCursorUpdate = ({ cursor, userId, username }) => {
       console.log("Remote cursor update:", userId, cursor); 
       setRemoteCursors((prev) => ({
         ...prev,
-        [userId]: { ...cursor, username, color: getUserColor(userId) }, // Overwrite old position
+        [userId]: { ...cursor, username, color: getUserColor(userId) }, 
       }));
     };
 
@@ -74,10 +73,10 @@ const RoomPage = () => {
     return () => socket.off("cursor-update", handleCursorUpdate);
   }, []);
 
-  // Handle local cursor changes
+  
   const handleEditorMount = (editor) => {
     editorRef.current = editor;
-    // console.log("Editor mounted");
+    
     console.log("Editor mounted for file:", currentFile.name); 
     const throttledEmitCursor = throttle((cursor) => {
       socket.emit("cursor-position", {
@@ -131,11 +130,9 @@ const RoomPage = () => {
     });
   };
 
-  // Join room and set up Socket.io listeners
   useEffect(() => {
     socket.emit("join-room", roomId);
 
-    // Listen for code updates from other users
     socket.on("code-update", ({ code, filePath }) => {
       if (currentFile?.path === filePath) {
         setCode(code); 
@@ -149,11 +146,9 @@ const RoomPage = () => {
 
 
 
-  // Replace the decorations useEffect with model markers
   useEffect(() => {
     if (!editorRef.current) return;
 
-    // Clear existing decorations first
     const oldDecorations = [...decorations];
     const newDecorations = Object.values(remoteCursors).map((cursor) => {
       return {
@@ -173,7 +168,6 @@ const RoomPage = () => {
       };
     });
 
-    // Apply new decorations and store their IDs
     const decorationIds = editorRef.current.deltaDecorations(
       oldDecorations, 
       newDecorations 
@@ -190,12 +184,9 @@ const RoomPage = () => {
   }, []);
 
 
-  // Handle code changes in the editor
   const handleFileChange = async (value) => {
     if (!currentFile) return;
-    // Update local state
     setCode(value);
-    // Broadcast changes to other users in the room
     socket.emit("code-change", {
       roomId,
       code: value,
@@ -203,7 +194,6 @@ const RoomPage = () => {
       filePath: currentFile.path,
     });
 
-    // Save the file to the backend
     try {
       const response = await fetch(`/api/rooms/${roomId}/files`, {
         method: "POST",
@@ -228,7 +218,6 @@ const RoomPage = () => {
     }
   };
 
-  // Execute code
   const [executionResult, setExecutionResult] = useState({
     output: "",
     language: "",
@@ -239,7 +228,7 @@ const RoomPage = () => {
     if (!currentFile || currentFile.isFolder) return;
 
     setIsExecuting(true);
-    setExecutionResult({ output: "", language: "", version: "" }); // Reset state
+    setExecutionResult({ output: "", language: "", version: "" }); 
 
     try {
       const response = await fetch(`/api/rooms/${roomId}/execute`, {
@@ -325,7 +314,6 @@ const RoomPage = () => {
                   <pre>{aiSuggestion}</pre>
                 </div>
               )}
-              {/* Input field */}
               <div className="input-container">
                 <label>Input (stdin):</label>
                 <textarea

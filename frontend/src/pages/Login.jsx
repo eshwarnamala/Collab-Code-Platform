@@ -6,7 +6,6 @@ const Login = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect to home if already logged in
   useEffect(() => {
     if (user) navigate("/home");
   }, [user]);
