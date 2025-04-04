@@ -18,12 +18,12 @@ export default defineConfig({
       // Proxy API requests to the backend (running on port 5000)
       '/api': {
         // target: 'http://localhost:5000',
-        target: 'https://collab-code-platform-server.vercel.app',
+        target: 'https://collab-code-platform-server.onrender.com',
         changeOrigin: true,
         secure: false,
       },
       '/auth': { // Proxy OAuth routes
-        target: 'https://collab-code-platform-server.vercel.app',
+        target: 'https://collab-code-platform-server.onrender.com',
         changeOrigin: true,
         secure: false,
       },
