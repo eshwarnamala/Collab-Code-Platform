@@ -1,0 +1,24 @@
+services:
+  frontend:
+    image: frontend
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    env_file:
+      - frontend/.env
+    networks:
+      - code_p
+    depends_on:
+      - backend
+  backend:
+    image: backend
+    build: ./backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - backend/.env
+    networks:
+      - code_p
+networks:
+  code_p:
+    driver: bridge
