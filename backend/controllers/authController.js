@@ -11,8 +11,8 @@ passport.use(
     {
       clientID: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: "http://localhost:5000/auth/github/callback",
-      // callbackURL: "https://collab-code-platform-server.onrender.com/auth/github/callback",
+      // callbackURL: "http://localhost:5000/auth/github/callback",
+      callbackURL: "https://collab-code-platform-server.onrender.com/auth/github/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
       try {

@@ -23,9 +23,9 @@ connectDB();
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    // origin: "http://localhost:3000",
     // origin: "https://collab-code-platform-client.vercel.app",
-    // origin: "https://collab-code-platform-client.onrender.com",
+    origin: "https://collab-code-platform-client.onrender.com",
     credentials: true,
   })
 ); 
@@ -41,11 +41,11 @@ app.use(
     }),
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, 
-      sameSite: "lax", 
-      // sameSite: "none", // Use 'none' for cross-origin cookies
-      secure: false, 
+      // sameSite: "lax", 
+      sameSite: "none", 
+      // secure: false, 
+      secure: true, 
       httpOnly: true,
-      // secure: true, 
       maxAge: 24 * 60 * 60 * 1000, 
     },
   })

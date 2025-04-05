@@ -6,8 +6,8 @@ export const initSocket = (server) => {
   io = new Server(server, {
     cors: {
       // origin: "https://collab-code-platform-client.vercel.app",
-      // origin: "https://collab-code-platform-client.onrender.com",
-      origin: "http://localhost:3000",
+      origin: "https://collab-code-platform-client.onrender.com",
+      // origin: "http://localhost:3000",
       methods: ["GET", "POST"],
     },
   });
