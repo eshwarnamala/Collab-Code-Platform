@@ -11,6 +11,7 @@ import "./controllers/authController.js";
 import roomRoutes from "./routes/roomRoutes.js";
 import { initSocket } from "./utils/socket.js";
 import aiRoutes from "./routes/aiRoutes.js";
+import MongoStore from "connect-mongo";
 
 
 dotenv.config();
@@ -33,11 +34,19 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,
+      ttl: 14 * 24 * 60 * 60 // 14 days
+    }),
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, 
-      sameSite: "lax", 
-      secure: false, 
+      // sameSite: "lax", 
+      sameSite: "none", // Use 'none' for cross-origin cookies
+      // secure: false, 
+      httpOnly: true,
+      secure: true, 
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
     },
   })
 );
