@@ -38,7 +38,7 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
   
   useEffect(() => {
     const fetchFiles = async () => {
-      const response = await fetch(`/api/rooms/${roomId}/files`);
+      const response = await fetch(`https://collab-code-platform-server.onrender.com/api/rooms/${roomId}/files`);
       const data = await response.json();
       const filteredFiles = data.filter((file) => file.path === currentPath);
       setFiles(filteredFiles);
@@ -47,7 +47,7 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
   }, [roomId, currentPath]);
 
   const fetchFiles = async () => {
-    const response = await fetch(`/api/rooms/${roomId}/files`);
+    const response = await fetch(`https://collab-code-platform-server.onrender.com/api/rooms/${roomId}/files`);
     const data = await response.json();
     const filteredFiles = data.filter((file) => file.path === currentPath);
     setFiles(filteredFiles);
@@ -59,7 +59,7 @@ const FileExplorer = ({ roomId, onFileSelect }) => {
     if (!newName) return;
 
     
-    await fetch(`/api/rooms/${roomId}/files`, {
+    await fetch(`https://collab-code-platform-server.onrender.com/api/rooms/${roomId}/files`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include", 

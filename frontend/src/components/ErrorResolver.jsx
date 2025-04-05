@@ -4,7 +4,7 @@ const ErrorResolver = ({ error, code }) => {
   const [solution, setSolution] = useState("");
 
   const handleResolve = async () => {
-    const response = await fetch("/api/ai/resolve-error", {
+    const response = await fetch("https://collab-code-platform-server.onrender.com/api/ai/resolve-error", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ error, code }),

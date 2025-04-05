@@ -7,7 +7,8 @@ const AISuggestions = ({ code, language, onSuggestionSelect }) => {
   useEffect(() => {
     const fetchSuggestions = async () => {
         try {
-          const response = await fetch("/api/ai/suggest", {
+          // const response = await fetch("/api/ai/suggest", {
+          const response = await fetch("https://collab-code-platform-server.onrender.com/api/ai/suggest", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ code, language }),

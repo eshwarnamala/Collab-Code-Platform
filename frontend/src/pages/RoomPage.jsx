@@ -29,7 +29,7 @@ const RoomPage = () => {
 
   useEffect(() => {
     const fetchFiles = async () => {
-      const response = await fetch(`/api/rooms/${roomId}/files`);
+      const response = await fetch(`https://collab-code-platform-server.onrender.com/api/rooms/${roomId}/files`);
       const data = await response.json();
 
       const path = searchParams.get("path") || "/";
@@ -96,7 +96,7 @@ const RoomPage = () => {
 
         setIsLoadingSuggestion(true);
         try {
-          const response = await fetch("/api/ai/suggest", {
+          const response = await fetch("https://collab-code-platform-server.onrender.com/api/ai/suggest", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -195,7 +195,7 @@ const RoomPage = () => {
     });
 
     try {
-      const response = await fetch(`/api/rooms/${roomId}/files`, {
+      const response = await fetch(`https://collab-code-platform-server.onrender.com/api/rooms/${roomId}/files`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -231,7 +231,7 @@ const RoomPage = () => {
     setExecutionResult({ output: "", language: "", version: "" }); 
 
     try {
-      const response = await fetch(`/api/rooms/${roomId}/execute`, {
+      const response = await fetch(`https://collab-code-platform-server.onrender.com/api/rooms/${roomId}/execute`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

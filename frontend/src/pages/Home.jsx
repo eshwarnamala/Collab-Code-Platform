@@ -16,7 +16,7 @@ const Home = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await fetch("/api/rooms/active", {
+        const response = await fetch("https://collab-code-platform-server.onrender.com/api/rooms/active", {
           credentials: "include",
         });
         const data = await response.json();
@@ -31,7 +31,7 @@ const Home = () => {
   const handleCreateRoom = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/rooms/create", {
+      const response = await fetch("https://collab-code-platform-server.onrender.com/api/rooms/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: roomName, password }),
@@ -47,7 +47,7 @@ const Home = () => {
   const handleJoinRoom = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`/api/rooms/${roomId}/join`, {
+      const response = await fetch(`https://collab-code-platform-server.onrender.com/api/rooms/${roomId}/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
