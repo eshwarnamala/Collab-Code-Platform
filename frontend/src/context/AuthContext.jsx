@@ -5,7 +5,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    
+    // Load user from localStorage if available
     const storedUser = localStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
@@ -13,11 +13,11 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  
+  // Check if user is logged in on initial load
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch("/auth/current-user", { credentials: "include" });
+        const response = await fetch("http://localhost:5000/auth/current-user", { credentials: "include" });
         const data = await response.json();
         if (data.user) {
           setUser(data.user);
@@ -36,12 +36,12 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  
+  // Login redirect
   const login = () => {
-    window.location.href = "/auth/github";
+    window.location.href = "http://localhost:5000/auth/github";
   };
 
-  
+  // Logout
   const logout = async () => {
     await fetch("/auth/logout", { credentials: "include" });
     setUser(null);

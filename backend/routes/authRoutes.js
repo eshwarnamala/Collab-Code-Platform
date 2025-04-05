@@ -15,7 +15,9 @@ router.get(
   (req, res) => {
     
     // res.redirect("https://collab-code-platform-client.vercel.app/home");
-    res.redirect("https://collab-code-platform-client.onrender.com/home");
+    // res.redirect("https://collab-code-platform-client.onrender.com/home");
+    res.redirect("http://localhost:3000/home");
+
   }
 );
 

@@ -14,7 +14,7 @@ const Login = () => {
     <div className="login-page">
       <h1>Collaborative Coding Platform</h1>
       {/* <button onClick={() => window.location.href = "https://collab-code-platform-server.onrender.com/auth/github"}> */}
-      <button onClick={() => window.location.href = "/auth/github"}>
+      <button onClick={() => window.location.href = "http://localhost:5000/auth/github"}>
         Login with GitHub
       </button>
     </div>
