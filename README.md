@@ -1,3 +1,18 @@
+To run this application you first need to have Docker installed on your system.
+> [!NOTE]
+> 1. Start Docker Engine
+> 2. Clone the repository
+
+```bash
+git clone https://github.com/KoteshwarChinnolla/Collab-Code-Platform/tree/deployment
+```
+> 3. Run Docker Compose
+
+```bash
+docker compose up --build
+```
+
+
 ## overview
 
 The Dockeriseing include creating a docker image for FrontEnd application and a Docker image for backEnd application. To run the entire application we individually need to run Each frontEnd and BackEnd containers separately. Instead of this we can create a compose file providing all the requirements to run both the applications together. So here we just need to run the docker compose file and your application will be up and running. Now how this two containers connect ? we introduce Networking. we make both the containers use the same network so that they can communicate with each other. 
