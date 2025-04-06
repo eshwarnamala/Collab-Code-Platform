@@ -3,11 +3,17 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Editor from "@monaco-editor/react";
 import FileExplorer from "../components/FileExplorer";
-import socket from "../utils/socket"; 
+import socket from "../utils/socket";
 import { getUserColor } from "../utils/colors";
 import throttle from "lodash.throttle";
 import { useVoice } from "../context/VoiceContext";
 import "./RoomPage.css";
+import isEqual from "lodash.isequal"; 
+import debounce from "lodash.debounce";
+
+const API = "https://collab-code-platform-server.onrender.com/api/"
+// const API = "http:localhost:5000/api/"
+
 
 const RoomPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -16,7 +22,7 @@ const RoomPage = () => {
   const { user } = useAuth();
   const { roomId } = useParams();
   const [currentFile, setCurrentFile] = useState(null);
-  const [code, setCode] = useState(""); 
+  const [code, setCode] = useState("");
   const [remoteCursors, setRemoteCursors] = useState({});
   const editorRef = useRef(null);
   //   const [output, setOutput] = useState("");
@@ -26,10 +32,19 @@ const RoomPage = () => {
 
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false);
+  const currentFileRef = useRef(null);
+  const isRemoteUpdate = useRef(false);
+  const cursorTimers = useRef({});
+
+
+
+  useEffect(() => {
+    currentFileRef.current = currentFile;
+  }, [currentFile]);
 
   useEffect(() => {
     const fetchFiles = async () => {
-      const response = await fetch(`https://collab-code-platform-server.onrender.com/api/rooms/${roomId}/files`);
+      const response = await fetch(`${API}/rooms/${roomId}/files`);
       const data = await response.json();
 
       const path = searchParams.get("path") || "/";
@@ -49,7 +64,6 @@ const RoomPage = () => {
     fetchFiles();
   }, [roomId, searchParams]);
 
-  
   useEffect(() => {
     if (user?._id) {
       joinRoom(roomId, user._id);
@@ -59,33 +73,89 @@ const RoomPage = () => {
     };
   }, [user, roomId]);
 
-  
   useEffect(() => {
-    const handleCursorUpdate = ({ cursor, userId, username }) => {
-      console.log("Remote cursor update:", userId, cursor); 
-      setRemoteCursors((prev) => ({
-        ...prev,
-        [userId]: { ...cursor, username, color: getUserColor(userId) }, 
-      }));
-    };
+    // const handleCursorUpdate = ({ cursor, userId, username}) => {
+    //   // if(!currentFile || currentFile.path !== filePath) return
+    //   console.log("Remote cursor update:", userId, cursor);
+    //   setRemoteCursors((prev) => ({
+    //     ...prev,
+    //     [userId]: { ...cursor, username, color: getUserColor(userId) }, // Overwrite old position
+    //   }));
+    // };
 
-    socket.on("cursor-update", handleCursorUpdate);
-    return () => socket.off("cursor-update", handleCursorUpdate);
+    const handleCursorUpdate = ({ cursor, userId, username, filePath, fileName }) => {
+      const current = currentFileRef.current;
+    
+      if (
+        current &&
+        current.path === filePath &&
+        current.name === fileName
+      ) {
+        setRemoteCursors((prev) => ({
+          ...prev,
+          [userId]: { ...cursor, username, color: getUserColor(userId) },
+        }));
+      }
+    }
+
+    // socket.on("cursor-update", handleCursorUpdate);
+    socket.on("cursor-update", ({ cursor, userId, username, filePath, fileName }) => {
+      const current = currentFileRef.current;
+    
+      if (
+        current &&
+        current.path === filePath &&
+        current.name === fileName
+      ) {
+        if (cursorTimers.current[userId]) {
+          clearTimeout(cursorTimers.current[userId]);
+        }
+    
+        cursorTimers.current[userId] = setTimeout(() => {
+          setRemoteCursors((prev) => {
+            const updated = { ...prev };
+            delete updated[userId];
+            return updated;
+          });
+        }, 2000);
+        setRemoteCursors((prev) => ({
+          ...prev,
+          [userId]: { ...cursor, username, color: getUserColor(userId) },
+        }));
+      }
+    });
+    
+    return () => {
+      socket.off("cursor-update", handleCursorUpdate);
+      Object.values(cursorTimers.current).forEach(clearTimeout);
+    }
   }, []);
 
-  
+  useEffect(() => {
+    return () => {
+      Object.values(cursorTimers.current).forEach(clearTimeout);
+    };
+  }, []);
+
   const handleEditorMount = (editor) => {
     editorRef.current = editor;
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      handleSave();
+    });
     
-    console.log("Editor mounted for file:", currentFile.name); 
-    const throttledEmitCursor = throttle((cursor) => {
+    // console.log("Editor mounted");
+    // console.log("Editor mounted for file:", currentFile.name);
+    
+    const throttledEmitCursor = throttle(({ cursor, filePath, fileName }) => {
       socket.emit("cursor-position", {
         roomId,
         cursor,
+        filePath,
+        fileName,
         userId: user._id,
         username: user.username,
       });
-    }, 100); 
+    }, 100);
 
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyCode.Space,
@@ -96,7 +166,7 @@ const RoomPage = () => {
 
         setIsLoadingSuggestion(true);
         try {
-          const response = await fetch("https://collab-code-platform-server.onrender.com/api/ai/suggest", {
+          const response = await fetch(`${API}/ai/suggest`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -111,7 +181,7 @@ const RoomPage = () => {
           }
 
           // setAiSuggestion(data.suggestion);
-          setAiSuggestion(data.suggestion.replace(/\r\n/g, '\n'));
+          setAiSuggestion(data.suggestion.replace(/\r\n/g, "\n"));
         } catch (err) {
           setAiSuggestion("Error: " + err.message);
         } finally {
@@ -120,22 +190,41 @@ const RoomPage = () => {
       }
     );
 
- 
+   
     editor.onDidChangeCursorPosition((e) => {
       const cursor = {
         lineNumber: e.position.lineNumber,
         column: e.position.column,
       };
-      throttledEmitCursor(cursor);
+      throttledEmitCursor({
+        cursor,
+        filePath: currentFile.path,
+        fileName: currentFile.name,
+      });
     });
+    
   };
 
   useEffect(() => {
     socket.emit("join-room", roomId);
 
-    socket.on("code-update", ({ code, filePath }) => {
-      if (currentFile?.path === filePath) {
-        setCode(code); 
+    socket.on("code-update", ({ code, filePath, fileName }) => {
+      const current = currentFileRef.current;
+
+      if (current && current.path === filePath && current.name === fileName) {
+        isRemoteUpdate.current = true;
+        if (editorRef.current && isRemoteUpdate.current) {
+          const currentVal = editorRef.current.getValue();
+          if (currentVal !== code) {
+            const cursorPos = editorRef.current.getPosition();
+            editorRef.current.setValue(code);
+    
+            if (cursorPos) {
+              editorRef.current.setPosition(cursorPos);
+            }
+          }
+        }
+        setCode(code);
       }
     });
 
@@ -169,8 +258,8 @@ const RoomPage = () => {
     });
 
     const decorationIds = editorRef.current.deltaDecorations(
-      oldDecorations, 
-      newDecorations 
+      oldDecorations,
+      newDecorations
     );
     setDecorations(decorationIds);
   }, [remoteCursors]);
@@ -183,41 +272,88 @@ const RoomPage = () => {
     };
   }, []);
 
+  const debouncedSaveFile = useRef(
+    throttle(async (value, fileName, filePath) => {
+      try {
+        const response = await fetch(`${API}/rooms/${roomId}/files`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            name: fileName,
+            content: value,
+            path: filePath,
+          }),
+        });
+  
+        const data = await response.json();
+        // console.log("Backend response:", data);
+  
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to save file");
+        }
+      } catch (err) {
+        console.error("Error saving file:", err);
+      }
+    }, 1000)
+  ).current;
+
+
+  const debouncedEmitCode = useRef(
+    throttle((roomId, value, path, name) => {
+      socket.emit("code-change", {
+        roomId,
+        code: value,
+        filePath: path,
+        fileName: name,
+      });
+    }, 300) 
+  ).current;
+  
+  
 
   const handleFileChange = async (value) => {
     if (!currentFile) return;
+    isRemoteUpdate.current = false;
     setCode(value);
-    socket.emit("code-change", {
-      roomId,
-      code: value,
-      // code: code,
-      filePath: currentFile.path,
-    });
 
-    try {
-      const response = await fetch(`https://collab-code-platform-server.onrender.com/api/rooms/${roomId}/files`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          name: currentFile.name,
-          content: value,
-          // content: code,
-          path: currentFile.path,
-        }),
-      });
+    debouncedEmitCode(roomId, value, currentFile.path, currentFile.name);
+    debouncedSaveFile(value, currentFile.name, currentFile.path);
+    
+    // socket.emit("code-change", {
+    //   roomId,
+    //   code: value,
+    //   filePath: currentFile.path,
+    //   fileName: currentFile.name,
+    // });
 
-      const data = await response.json();
-      console.log("Backend response:", data); 
+    // try {
+    //   const response = await fetch(`${API}/rooms/${roomId}/files`, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     credentials: "include",
+    //     body: JSON.stringify({
+    //       name: currentFile.name,
+    //       content: value,
+    //       // content: code,
+    //       path: currentFile.path,
+    //     }),
+    //   });
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to save file");
-      }
-    } catch (err) {
-      console.error("Error saving file:", err);
-    }
+    //   const data = await response.json();
+    //   console.log("Backend response:", data);
+
+    //   if (!response.ok) {
+    //     throw new Error(data.error || "Failed to save file");
+    //   }
+    // } catch (err) {
+    //   console.error("Error saving file:", err);
+    // }
   };
 
+
+
+  // Execute code
   const [executionResult, setExecutionResult] = useState({
     output: "",
     language: "",
@@ -231,18 +367,18 @@ const RoomPage = () => {
     setExecutionResult({ output: "", language: "", version: "" }); 
 
     try {
-      const response = await fetch(`https://collab-code-platform-server.onrender.com/api/rooms/${roomId}/execute`, {
+      const response = await fetch(`${API}/rooms/${roomId}/execute`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Cache-Control": "no-cache", 
+          "Cache-Control": "no-cache",
         },
         body: JSON.stringify({
           //   code: currentFile.content,
           code: code,
           language: currentFile.language,
           input: input,
-          timestamp: Date.now(), 
+          timestamp: Date.now(),
         }),
       });
 
@@ -262,6 +398,32 @@ const RoomPage = () => {
       setIsExecuting(false);
     }
   };
+  const handleSave = async () => {
+    if (!currentFile) return;
+  
+    try {
+      const response = await fetch(`${API}/rooms/${roomId}/files`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: currentFile.name,
+          content: code,
+          path: currentFile.path,
+        }),
+      });
+  
+      const data = await response.json();
+      // console.log("Saved file:", data);
+  
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save file");
+      }
+    } catch (err) {
+      console.error("Error saving file:", err);
+    }
+  };
+  
   return (
     <div className="room-page">
       <h1>{`Room #${roomId}`}</h1>
@@ -286,25 +448,29 @@ const RoomPage = () => {
           <FileExplorer
             roomId={roomId}
             onFileSelect={(file) => {
-              console.log("Selected file:", file); 
+              // console.log("Selected file:", file);
               setCurrentFile(file);
-              setCode(file.content); 
+              setCode(file.content);
+              setRemoteCursors({});
             }}
           />
         </div>
         <div className="editor-container">
           {currentFile && !currentFile.isFolder ? (
             <div className="coding-env">
-              <div className="editor-header">
+              <div className="editor-header space-x-2">
                 <button onClick={handleExecute} disabled={isExecuting}>
                   {isExecuting ? "Running..." : "Run Code"}
+                </button>
+                <button onClick={() => handleSave()} disabled={!currentFile}>
+                  💾 Save File
                 </button>
               </div>
               <Editor
                 key={`${currentFile.path}-${currentFile.name}`}
                 height="60vh"
                 language={currentFile.language}
-                value={code} 
+                value={code}
                 onChange={handleFileChange}
                 onMount={handleEditorMount}
               />
@@ -314,6 +480,7 @@ const RoomPage = () => {
                   <pre>{aiSuggestion}</pre>
                 </div>
               )}
+              {/* Input field */}
               <div className="input-container">
                 <label>Input (stdin):</label>
                 <textarea
@@ -341,4 +508,3 @@ const RoomPage = () => {
 };
 
 export default RoomPage;
-
