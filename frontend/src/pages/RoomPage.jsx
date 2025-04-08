@@ -7,18 +7,30 @@ import socket from "../utils/socket";
 import { getUserColor } from "../utils/colors";
 import throttle from "lodash.throttle";
 import { useVoice } from "../context/VoiceContext";
-import "./RoomPage.css";
-import isEqual from "lodash.isequal"; 
-import debounce from "lodash.debounce";
+import { useVideo } from "../context/VideoContext";
 
-const API = "https://collab-code-platform-server.onrender.com/api/"
+import "./RoomPage.css";
+
+
+const API = "https://collab-code-platform-server.onrender.com/api"
 // const API = "http:localhost:5000/api/"
 
 
 const RoomPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { joinRoom, leaveRoom, toggleMute, isMuted, isInCall, remoteUsers } =
-    useVoice();
+  // const { joinRoom, leaveRoom, toggleMute, isMuted, isInCall, remoteUsers } =
+  //   useVoice();
+  const {
+    joinRoom,
+    leaveRoom,
+    toggleMute,
+    toggleVideo,
+    isMuted,
+    isVideoOn,
+    isInCall,
+    remoteUsers,
+    localPlayerRef,
+  } = useVideo();
   const { user } = useAuth();
   const { roomId } = useParams();
   const [currentFile, setCurrentFile] = useState(null);
@@ -117,7 +129,7 @@ const RoomPage = () => {
             delete updated[userId];
             return updated;
           });
-        }, 2000);
+        }, 0);
         setRemoteCursors((prev) => ({
           ...prev,
           [userId]: { ...cursor, username, color: getUserColor(userId) },
@@ -295,7 +307,7 @@ const RoomPage = () => {
       } catch (err) {
         console.error("Error saving file:", err);
       }
-    }, 1000)
+    }, 3000)
   ).current;
 
 
@@ -307,7 +319,7 @@ const RoomPage = () => {
         filePath: path,
         fileName: name,
       });
-    }, 300) 
+    }, 2000) 
   ).current;
   
   
@@ -320,35 +332,7 @@ const RoomPage = () => {
     debouncedEmitCode(roomId, value, currentFile.path, currentFile.name);
     debouncedSaveFile(value, currentFile.name, currentFile.path);
     
-    // socket.emit("code-change", {
-    //   roomId,
-    //   code: value,
-    //   filePath: currentFile.path,
-    //   fileName: currentFile.name,
-    // });
-
-    // try {
-    //   const response = await fetch(`${API}/rooms/${roomId}/files`, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     credentials: "include",
-    //     body: JSON.stringify({
-    //       name: currentFile.name,
-    //       content: value,
-    //       // content: code,
-    //       path: currentFile.path,
-    //     }),
-    //   });
-
-    //   const data = await response.json();
-    //   console.log("Backend response:", data);
-
-    //   if (!response.ok) {
-    //     throw new Error(data.error || "Failed to save file");
-    //   }
-    // } catch (err) {
-    //   console.error("Error saving file:", err);
-    // }
+  
   };
 
 
@@ -428,13 +412,39 @@ const RoomPage = () => {
     <div className="room-page">
       <h1>{`Room #${roomId}`}</h1>
       <p>Welcome, {user.username}!</p>
-      <div className="voice-controls">
-        <button onClick={toggleMute}>{isMuted ? "Unmute" : "Mute"}</button>
-        <button
-          onClick={isInCall ? leaveRoom : () => joinRoom(roomId, user._id)}
-        >
-          {isInCall ? "Leave Call" : "Join Call"}
-        </button>
+      <div className="video-controls">
+        
+        <div className="video-container">
+          <div ref={localPlayerRef} className="local-video">
+            {!isVideoOn && (
+              <div className="video-off-placeholder">Your video is off</div>
+            )}
+          </div>
+          <div id="remote-videos-container" className="remote-videos">
+            {remoteUsers.map(
+              (user) =>
+                !user.video && (
+                  <div
+                    key={`placeholder-${user.uid}`}
+                    className="remote-video-container video-off"
+                  >
+                    <span>{user.uid}'s video is off</span>
+                  </div>
+                )
+            )}
+          </div>
+        </div>
+        <div className="control-buttons">
+          <button onClick={toggleMute}>{isMuted ? "Unmute" : "Mute"}</button>
+          <button onClick={toggleVideo}>
+            {isVideoOn ? "Turn Off Video" : "Turn On Video"}
+          </button>
+          <button
+            onClick={isInCall ? leaveRoom : () => joinRoom(roomId, user._id)}
+          >
+            {isInCall ? "Leave Call" : "Join Call"}
+          </button>
+        </div>
       </div>
       <div className="participants">
         {remoteUsers.map((user) => (

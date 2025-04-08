@@ -15,19 +15,36 @@ export const initSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
+    // Join a room
     socket.on("join-room", (roomId) => {
       socket.join(roomId);
-      console.log(`User ${socket.id} joined room ${roomId}`);
+      // console.log(`User ${socket.id} joined room ${roomId}`);
     });
 
-    socket.on("code-change", ({ roomId, code, filePath }) => {
-      socket.to(roomId).emit("code-update", { code, filePath });
+    // Handle code changes
+    socket.on("code-change", ({ roomId, code, filePath, fileName }) => {
+      socket.to(roomId).emit("code-update", { code, filePath, fileName });
     });
 
-    socket.on("cursor-position", ({ roomId, cursor, userId, username }) => {
-        console.log(`Cursor position received from ${username} (${userId}):`, cursor);
-      socket.to(roomId).emit("cursor-update", { cursor, userId, username });
+    // Listen for cursor position changes
+    // socket.on("cursor-position", ({ roomId, cursor, userId, username }) => {
+    //     // console.log(`Cursor position received from ${username} (${userId}):`, cursor);
+    //   socket.to(roomId).emit("cursor-update", { cursor, userId, username });
+    // });
+
+    socket.on("cursor-position", ({ roomId, cursor, userId, username, filePath, fileName }) => {
+      socket.to(roomId).emit("cursor-update", {
+        cursor,
+        userId,
+        username,
+        filePath,
+        fileName,
+      });
     });
+    
+
+    
+    
 
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
