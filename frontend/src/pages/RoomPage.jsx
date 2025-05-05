@@ -11,15 +11,12 @@ import { useVideo } from "../context/VideoContext";
 
 import "./RoomPage.css";
 
-
 const API = "https://collab-code-platform-server.onrender.com/api"
-// const API = "http:localhost:5000/api/"
-
+// const API = "http://localhost:5000/api";
 
 const RoomPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  // const { joinRoom, leaveRoom, toggleMute, isMuted, isInCall, remoteUsers } =
-  //   useVoice();
+  // const { joinRoom, leaveRoom, toggleMute, isMuted, isInCall, remoteUsers } = useVoice();
   const {
     joinRoom,
     leaveRoom,
@@ -46,9 +43,8 @@ const RoomPage = () => {
   const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false);
   const currentFileRef = useRef(null);
   const isRemoteUpdate = useRef(false);
+  const [isSaved, setIsSaved] = useState(false);
   const cursorTimers = useRef({});
-
-
 
   useEffect(() => {
     currentFileRef.current = currentFile;
@@ -68,8 +64,8 @@ const RoomPage = () => {
         );
         if (selectedFile) {
           setCurrentFile(selectedFile);
-          setCode(selectedFile.content); 
-          // editorRef.current = null; 
+          setCode(selectedFile.content);
+          // editorRef.current = null;
         }
       }
     };
@@ -86,61 +82,54 @@ const RoomPage = () => {
   }, [user, roomId]);
 
   useEffect(() => {
-    // const handleCursorUpdate = ({ cursor, userId, username}) => {
-    //   // if(!currentFile || currentFile.path !== filePath) return
-    //   console.log("Remote cursor update:", userId, cursor);
-    //   setRemoteCursors((prev) => ({
-    //     ...prev,
-    //     [userId]: { ...cursor, username, color: getUserColor(userId) }, // Overwrite old position
-    //   }));
-    // };
 
-    const handleCursorUpdate = ({ cursor, userId, username, filePath, fileName }) => {
+    const handleCursorUpdate = ({
+      cursor,
+      userId,
+      username,
+      filePath,
+      fileName,
+    }) => {
       const current = currentFileRef.current;
-    
-      if (
-        current &&
-        current.path === filePath &&
-        current.name === fileName
-      ) {
+
+      if (current && current.path === filePath && current.name === fileName) {
         setRemoteCursors((prev) => ({
           ...prev,
           [userId]: { ...cursor, username, color: getUserColor(userId) },
         }));
       }
-    }
+    };
 
     // socket.on("cursor-update", handleCursorUpdate);
-    socket.on("cursor-update", ({ cursor, userId, username, filePath, fileName }) => {
-      const current = currentFileRef.current;
-    
-      if (
-        current &&
-        current.path === filePath &&
-        current.name === fileName
-      ) {
-        if (cursorTimers.current[userId]) {
-          clearTimeout(cursorTimers.current[userId]);
+    socket.on(
+      "cursor-update",
+      ({ cursor, userId, username, filePath, fileName }) => {
+        const current = currentFileRef.current;
+
+        if (current && current.path === filePath && current.name === fileName) {
+          if (cursorTimers.current[userId]) {
+            clearTimeout(cursorTimers.current[userId]);
+          }
+
+          cursorTimers.current[userId] = setTimeout(() => {
+            setRemoteCursors((prev) => {
+              const updated = { ...prev };
+              delete updated[userId];
+              return updated;
+            });
+          }, 2000);
+          setRemoteCursors((prev) => ({
+            ...prev,
+            [userId]: { ...cursor, username, color: getUserColor(userId) },
+          }));
         }
-    
-        cursorTimers.current[userId] = setTimeout(() => {
-          setRemoteCursors((prev) => {
-            const updated = { ...prev };
-            delete updated[userId];
-            return updated;
-          });
-        }, 0);
-        setRemoteCursors((prev) => ({
-          ...prev,
-          [userId]: { ...cursor, username, color: getUserColor(userId) },
-        }));
       }
-    });
-    
+    );
+
     return () => {
       socket.off("cursor-update", handleCursorUpdate);
       Object.values(cursorTimers.current).forEach(clearTimeout);
-    }
+    };
   }, []);
 
   useEffect(() => {
@@ -151,13 +140,13 @@ const RoomPage = () => {
 
   const handleEditorMount = (editor) => {
     editorRef.current = editor;
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      handleSave();
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, async () => {
+      await handleSave();
     });
-    
+
     // console.log("Editor mounted");
     // console.log("Editor mounted for file:", currentFile.name);
-    
+
     const throttledEmitCursor = throttle(({ cursor, filePath, fileName }) => {
       socket.emit("cursor-position", {
         roomId,
@@ -202,7 +191,6 @@ const RoomPage = () => {
       }
     );
 
-   
     editor.onDidChangeCursorPosition((e) => {
       const cursor = {
         lineNumber: e.position.lineNumber,
@@ -214,7 +202,6 @@ const RoomPage = () => {
         fileName: currentFile.name,
       });
     });
-    
   };
 
   useEffect(() => {
@@ -230,7 +217,7 @@ const RoomPage = () => {
           if (currentVal !== code) {
             const cursorPos = editorRef.current.getPosition();
             editorRef.current.setValue(code);
-    
+
             if (cursorPos) {
               editorRef.current.setPosition(cursorPos);
             }
@@ -244,8 +231,6 @@ const RoomPage = () => {
       socket.off("code-update");
     };
   }, [roomId, currentFile]);
-
-
 
   useEffect(() => {
     if (!editorRef.current) return;
@@ -297,19 +282,18 @@ const RoomPage = () => {
             path: filePath,
           }),
         });
-  
+
         const data = await response.json();
         // console.log("Backend response:", data);
-  
+
         if (!response.ok) {
           throw new Error(data.error || "Failed to save file");
         }
       } catch (err) {
         console.error("Error saving file:", err);
       }
-    }, 3000)
+    }, 0)
   ).current;
-
 
   const debouncedEmitCode = useRef(
     throttle((roomId, value, path, name) => {
@@ -319,10 +303,8 @@ const RoomPage = () => {
         filePath: path,
         fileName: name,
       });
-    }, 2000) 
+    }, 300)
   ).current;
-  
-  
 
   const handleFileChange = async (value) => {
     if (!currentFile) return;
@@ -330,12 +312,10 @@ const RoomPage = () => {
     setCode(value);
 
     debouncedEmitCode(roomId, value, currentFile.path, currentFile.name);
-    debouncedSaveFile(value, currentFile.name, currentFile.path);
+    // debouncedSaveFile(value, currentFile.name, currentFile.path);
+
     
-  
   };
-
-
 
   // Execute code
   const [executionResult, setExecutionResult] = useState({
@@ -348,7 +328,7 @@ const RoomPage = () => {
     if (!currentFile || currentFile.isFolder) return;
 
     setIsExecuting(true);
-    setExecutionResult({ output: "", language: "", version: "" }); 
+    setExecutionResult({ output: "", language: "", version: "" });
 
     try {
       const response = await fetch(`${API}/rooms/${roomId}/execute`, {
@@ -384,7 +364,7 @@ const RoomPage = () => {
   };
   const handleSave = async () => {
     if (!currentFile) return;
-  
+
     try {
       const response = await fetch(`${API}/rooms/${roomId}/files`, {
         method: "POST",
@@ -396,22 +376,28 @@ const RoomPage = () => {
           path: currentFile.path,
         }),
       });
-  
+
       const data = await response.json();
       // console.log("Saved file:", data);
-  
+
       if (!response.ok) {
         throw new Error(data.error || "Failed to save file");
       }
+      setCurrentFile((prev) => ({
+        ...prev,
+        content: code,
+      }));
+      // alert("File saved successfully!");
     } catch (err) {
       console.error("Error saving file:", err);
     }
   };
-  
+
   return (
     <div className="room-page">
       <h1>{`Room #${roomId}`}</h1>
       <p>Welcome, {user.username}!</p>
+      
       <div className="video-controls">
         
         <div className="video-container">
@@ -457,12 +443,33 @@ const RoomPage = () => {
         <div className="file-container">
           <FileExplorer
             roomId={roomId}
-            onFileSelect={(file) => {
-              // console.log("Selected file:", file);
-              setCurrentFile(file);
-              setCode(file.content);
-              setRemoteCursors({});
+            onFileSelect={async (file) => {
+              if (currentFile && code !== currentFile.content) {
+                const shouldSave = window.confirm(
+                  "You have unsaved changes. Do you want to save before switching files?"
+                );
+                if (shouldSave) {
+                  await handleSave();
+                } else {
+                  return;
+                }
+              }
+            
+              try {
+                const response = await fetch(`${API}/rooms/${roomId}/files`);
+                const files = await response.json();
+                const fresh = files.find(f => f.name === file.name && f.path === file.path);
+                
+                if (fresh) {
+                  setCurrentFile({ ...fresh });
+                  setCode(fresh.content);
+                  setRemoteCursors({});
+                }
+              } catch (err) {
+                console.error("Error fetching file:", err);
+              }
             }}
+            
           />
         </div>
         <div className="editor-container">
@@ -477,7 +484,8 @@ const RoomPage = () => {
                 </button>
               </div>
               <Editor
-                key={`${currentFile.path}-${currentFile.name}`}
+                // key={`${currentFile.path}-${currentFile.name}`}
+                key={`${currentFile.path}-${currentFile.name}-${currentFile.content?.length}`}
                 height="60vh"
                 language={currentFile.language}
                 value={code}
